@@ -58,7 +58,7 @@ export function visionAdapter(
           {type:"image_url",image_url:{url:`data:${file.type};base64,${b64}`,detail:"low"}},
         ]},
       ],
-      signal:AbortSignal.timeout(45000),
+      
     });
     return claimSchema.parse(JSON.parse(r.choices[0]?.message?.content??"{}"));
   }};

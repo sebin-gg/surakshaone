@@ -24,7 +24,7 @@ function reducer(app:AppState,event:WorkflowEvent):AppState{
     case"READY":return{...app,state:next};
     case"DISPATCH":return{...app,state:next};
     case"ERROR":return{...app,state:next,error:"Upload failed. Try again."};
-    case"RESET":return{INITIAL};
+    case"RESET":return{...INITIAL};
     default:return{...app,state:next};
   }
 }

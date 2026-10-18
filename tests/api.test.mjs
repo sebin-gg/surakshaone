@@ -30,6 +30,10 @@ async function req(path, opts = {}) {
   return { status: res.status, headers, body, ok: res.ok };
 }
 
+function check(condition, test, failureTest = test, failureDetail = "") {
+  log(condition ? "pass" : "fail", condition ? test : failureTest, condition ? "" : failureDetail);
+}
+
 function makeImage(size, type = "image/png", name = "test.png") {
   const buf = Buffer.alloc(size);
   // Minimal valid headers
@@ -557,30 +561,14 @@ async function run() {
   // SECTION 12: Accessibility Basics
   // ═══════════════════════════════════════════
   console.log("\n♿ SECTION 12: Accessibility Basics");
+  const homepage = await req("/");
+  const html = typeof homepage.body === "string" ? homepage.body : "";
 
   {
-    const r = await req("/");
-    const html = typeof r.body === "string" ? r.body : "";
-    if (html.includes('aria-label') || html.includes('role=')) {
-      log("pass", "Has ARIA attributes");
-    } else {
-      log("fail", "Has ARIA attributes", "No aria-label or role found");
-    }
-    if (html.includes("<h1")) {
-      log("pass", "Has h1 heading");
-    } else {
-      log("fail", "Has h1 heading");
-    }
-    if (html.includes("<label") || html.includes("aria-label")) {
-      log("pass", "Has form labels");
-    } else {
-      log("fail", "Has form labels");
-    }
-    if (html.includes("alt=") || html.includes("aria-label")) {
-      log("pass", "Has alt/aria attributes on interactive elements");
-    } else {
-      log("fail", "Missing alt/aria on interactive elements");
-    }
+    check(html.includes('aria-label') || html.includes('role='), "Has ARIA attributes", "Has ARIA attributes", "No aria-label or role found");
+    check(html.includes("<h1"), "Has h1 heading");
+    check(html.includes("<label") || html.includes("aria-label"), "Has form labels");
+    check(html.includes("alt=") || html.includes("aria-label"), "Has alt/aria attributes on interactive elements", "Missing alt/aria on interactive elements");
   }
 
   // ═══════════════════════════════════════════
@@ -589,18 +577,8 @@ async function run() {
   console.log("\n📁 SECTION 13: Upload Input Constraints");
 
   {
-    const r = await req("/");
-    const html = typeof r.body === "string" ? r.body : "";
-    if (html.includes('accept="image/')) {
-      log("pass", "File input has accept attribute");
-    } else {
-      log("fail", "File input missing accept attribute");
-    }
-    if (html.includes("type=\"file\"")) {
-      log("pass", "File input present");
-    } else {
-      log("fail", "File input present");
-    }
+    check(html.includes('accept="image/'), "File input has accept attribute", "File input missing accept attribute");
+    check(html.includes("type=\"file\""), "File input present");
   }
 
   // ═══════════════════════════════════════════
@@ -609,8 +587,6 @@ async function run() {
   console.log("\n🔘 SECTION 14: Double-Submit Prevention");
 
   {
-    const r = await req("/");
-    const html = typeof r.body === "string" ? r.body : "";
     // Check if button has disabled attribute or JS handles state
     if (html.includes("disabled") && (html.includes("busy") || html.includes("setBusy") || html.includes("!file"))) {
       log("pass", "Button uses busy state for disable");
@@ -627,18 +603,8 @@ async function run() {
   console.log("\n🚨 SECTION 15: Emergency Contact");
 
   {
-    const r = await req("/");
-    const html = typeof r.body === "string" ? r.body : "";
-    if (html.includes("tel:1930")) {
-      log("pass", "Emergency 1930 link present");
-    } else {
-      log("fail", "Emergency 1930 link present");
-    }
-    if (html.includes("1930")) {
-      log("pass", "Cybercrime helpline number displayed");
-    } else {
-      log("fail", "Cybercrime helpline number displayed");
-    }
+    check(html.includes("tel:1930"), "Emergency 1930 link present");
+    check(html.includes("1930"), "Cybercrime helpline number displayed");
   }
 
   // ═══════════════════════════════════════════
@@ -647,8 +613,6 @@ async function run() {
   console.log("\n🏷️ SECTION 16: Demo Labeling");
 
   {
-    const r = await req("/");
-    const html = typeof r.body === "string" ? r.body : "";
     if (html.toLowerCase().includes("demo") || html.toLowerCase().includes("prototype")) {
       log("pass", "Demo/prototype label visible", "No real submission occurs");
     } else {
@@ -675,31 +639,10 @@ async function run() {
   // ═══════════════════════════════════════════
   console.log("\n🚫 SECTION 18: API Method Restrictions");
 
-  {
-    const r = await req("/api/claim", { method: "DELETE" });
-    if (r.status === 405 || r.status === 400) {
-      log("pass", "DELETE /api/claim rejected", `Status ${r.status}`);
-    } else {
-      log("fail", "DELETE /api/claim rejected", `Status ${r.status}`);
-    }
-  }
-
-  {
-    const r = await req("/api/claim", { method: "PUT" });
-    if (r.status === 405 || r.status === 400) {
-      log("pass", "PUT /api/claim rejected", `Status ${r.status}`);
-    } else {
-      log("fail", "PUT /api/claim rejected", `Status ${r.status}`);
-    }
-  }
-
-  {
-    const r = await req("/api/claim", { method: "PATCH" });
-    if (r.status === 405 || r.status === 400) {
-      log("pass", "PATCH /api/claim rejected", `Status ${r.status}`);
-    } else {
-      log("fail", "PATCH /api/claim rejected", `Status ${r.status}`);
-    }
+  for (const method of ["DELETE", "PUT", "PATCH"]) {
+    const r = await req("/api/claim", { method });
+    const rejected = r.status === 405 || r.status === 400;
+    log(rejected ? "pass" : "fail", `${method} /api/claim rejected`, `Status ${r.status}`);
   }
 
   // ═══════════════════════════════════════════

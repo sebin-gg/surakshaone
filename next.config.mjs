@@ -5,6 +5,9 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    nodeMiddleware: true,
+  },
   reactStrictMode: true,
   outputFileTracingRoot: projectRoot,
   headers: async () => [

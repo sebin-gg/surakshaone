@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { contentSecurityPolicy, securityHeaders } from "./lib/platform-policy.mjs";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,18 +12,8 @@ const nextConfig = {
     {
       source: "/(.*)",
       headers: [
-        { key: "X-Content-Type-Options", value: "nosniff" },
-        { key: "X-Frame-Options", value: "DENY" },
-        { key: "X-XSS-Protection", value: "1; mode=block" },
-        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-        {
-          key: "Permissions-Policy",
-          value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-        },
-        {
-          key: "Strict-Transport-Security",
-          value: "max-age=31536000; includeSubDomains",
-        },
+        ...Object.entries(securityHeaders).map(([key, value]) => ({ key, value })),
+        { key: "Content-Security-Policy", value: contentSecurityPolicy },
       ],
     },
   ],
